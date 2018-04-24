@@ -21,7 +21,8 @@ def upload():
         upfile = request.files.get('photo')
         if upfile:
             mdata = get_metadata(upfile)
-            get_gpsdata(mdata)
+            gps_values = get_gpsdata(mdata)
+            final_data = formatter(mdata, gps_values)
             return 'OK'
     else:
         return "Error, try again!!"
@@ -43,9 +44,9 @@ def get_metadata(pfile):
                     sub_decoded = GPSTAGS.get(t, t)
                     gps_data[sub_decoded] = value[t]
                 exif_data[decoded] = gps_data
-                print (tag, " + ", value)
+                #print (tag, " + ", value)
             else:
-                print (tag, " - ", value)
+                #print (tag, " - ", value)
                 exif_data[decoded] = value
     else:
         return "Error while trying read tags"
@@ -57,6 +58,7 @@ def get_metadata(pfile):
 def get_gpsdata(pmetadata):
     latitude = None
     longitude = None
+    gps_data_transf = {}
     if "GPSInfo" in pmetadata:
         gps_info = pmetadata["GPSInfo"]
         #gps_latitude = self.get_if_exist(gps_info, "GPSLatitude")
@@ -72,15 +74,16 @@ def get_gpsdata(pmetadata):
             if gps_longitude_ref != "E":
                 longitude = 0 - longitude
 
-        print "GPS INFO present"
-        print gps_latitude
-        print latitude
-        print gps_latitude_ref
-        print longitude
-        print gps_longitude_ref
+        #print "GPS INFO present"
+       
+        #print latitude
+        #print gps_latitude_ref
+        #print longitude
+        #print gps_longitude_ref
         googlemaps = 'https://maps.google.com/?ll=' + str(latitude) + ',' + str(longitude) + '&z14&views=traffic'
-        print googlemaps
-    return "ok"
+        #print googlemaps
+        gps_data_transf.update({'Latitude': latitude,'GPS_latitude_ref':gps_latitude_ref,'Longitude': longitude,'GPS_longitude_ref':gps_longitude_ref,'googlemaps':googlemaps}) 
+    return gps_data_transf
 
 
 #convert gps coordinates to float degress
@@ -96,6 +99,57 @@ def convert_to_degress(value):
     s = float(s0) / float(s1)
 
     return d + (m / 60.0) + (s / 3600.0)
+
+#format response
+def formatter(pexif_data, pgps_data):
+    print pexif_data
+    #print pgps_data
+
+    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '0':
+		print ("Orientation Vertical")
+    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '1':
+		print ("Orientation Horizontal")
+    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '2':
+		print ("Orientation Mirror Horizontal")		
+    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '3':
+		print ("Orientation Rotate 180")		
+    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '4':
+		print ("Orientation Mirror vertical")		
+    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '5':
+		print ("Orientation Mirror horizontal and rotate 270 CW")		
+    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '6':
+		print ("Orientation Rotate 90 CW")		
+    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '7':
+		print ("Orientation Mirror horizontal and rotate 90 CW")			
+    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '8':
+		print ("Orientation Rotate 270 CW")		
+
+    if 'GPSAltitudeRef' in pexif_data and pexif_data['GPSAltitudeRef'] == '\x00':
+		print ("GPSAltitudeRef  Above Sea Level")	
+    if 'GPSAltitudeRef' in pexif_data and pexif_data['GPSAltitudeRef'] == '1':
+		print ("GPSAltitudeRef  Below Sea Level")
+
+    if 'Flash' in pexif_data and pexif_data['Flash'] == '0':
+		print ("Flash NO")
+    if 'Flash' in pexif_data and pexif_data['Flash'] == '1':
+		print ("Flash YES")
+
+    if 'GPSSpeedRef' in pexif_data and pexif_data['GPSSpeedRef'] == 'K':
+		print ("GPSSpeedRef  km/h")
+    if 'GPSSpeedRef' in pexif_data and pexif_data['GPSSpeedRef'] == 'M':
+		print ("GPSSpeedRef  mph")
+    if 'GPSSpeedRef' in pexif_data and pexif_data['GPSSpeedRef'] == 'N':
+        print ("GPSSpeedRef  knots")
+        
+    if 'ResolutionUnit' in pexif_data and pexif_data['ResolutionUnit'] == '1':
+		print ("ResolutionUnit None")
+    if 'ResolutionUnit' in pexif_data and pexif_data['ResolutionUnit'] == '12':
+		print ("ResolutionUnit inches")	
+    if 'ResolutionUnit' in pexif_data and pexif_data['ResolutionUnit'] == '3':
+		print ("ResolutionUnit cm")	
+    
+    
+    return "ok"
 
 if __name__ == "__main__":
     application.run()
