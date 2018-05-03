@@ -18,12 +18,16 @@ def hello(param):
 @application.route('/api/v1/mex/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST' and 'photo' in request.files:
-        upfile = request.files.get('photo')
-        if upfile:
-            mdata = get_metadata(upfile)
-            gps_values = get_gpsdata(mdata)
-            final_data = formatter(mdata, gps_values)
-            return 'OK'
+        try:
+          upfile = request.files.get('photo')
+
+          if upfile:
+              mdata = get_metadata(upfile)
+              gps_values = get_gpsdata(mdata)
+              final_data = formatter(mdata, gps_values)
+              return 'OK'
+        except:
+          return 'KO'
     else:
         return "Error, try again!!"
 
