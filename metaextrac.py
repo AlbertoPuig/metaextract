@@ -51,7 +51,6 @@ def get_metadata(pfile):
     else:
         return "Error while trying read tags"
 
-    
     return exif_data
 
 #trasnform gps data
@@ -61,7 +60,6 @@ def get_gpsdata(pmetadata):
     gps_data_transf = {}
     if "GPSInfo" in pmetadata:
         gps_info = pmetadata["GPSInfo"]
-        #gps_latitude = self.get_if_exist(gps_info, "GPSLatitude")
         gps_latitude = gps_info['GPSLatitude']
         gps_latitude_ref = gps_info['GPSLatitudeRef']
         gps_longitude = gps_info['GPSLongitude']
@@ -73,15 +71,7 @@ def get_gpsdata(pmetadata):
             longitude = convert_to_degress(gps_longitude)
             if gps_longitude_ref != "E":
                 longitude = 0 - longitude
-
-        #print "GPS INFO present"
-       
-        #print latitude
-        #print gps_latitude_ref
-        #print longitude
-        #print gps_longitude_ref
         googlemaps = 'https://maps.google.com/?ll=' + str(latitude) + ',' + str(longitude) + '&z14&views=traffic'
-        #print googlemaps
         gps_data_transf.update({'Latitude': latitude,'GPS_latitude_ref':gps_latitude_ref,'Longitude': longitude,'GPS_longitude_ref':gps_longitude_ref,'googlemaps':googlemaps}) 
     return gps_data_transf
 
@@ -102,54 +92,57 @@ def convert_to_degress(value):
 
 #format response
 def formatter(pexif_data, pgps_data):
-    print pexif_data
-    #print pgps_data
-
-    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '0':
-		print ("Orientation Vertical")
-    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '1':
-		print ("Orientation Horizontal")
-    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '2':
-		print ("Orientation Mirror Horizontal")		
-    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '3':
-		print ("Orientation Rotate 180")		
-    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '4':
-		print ("Orientation Mirror vertical")		
-    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '5':
-		print ("Orientation Mirror horizontal and rotate 270 CW")		
-    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '6':
-		print ("Orientation Rotate 90 CW")		
-    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '7':
-		print ("Orientation Mirror horizontal and rotate 90 CW")			
-    if 'Orientation' in pexif_data and pexif_data['Orientation'] == '8':
-		print ("Orientation Rotate 270 CW")		
-
-    if 'GPSAltitudeRef' in pexif_data and pexif_data['GPSAltitudeRef'] == '\x00':
-		print ("GPSAltitudeRef  Above Sea Level")	
-    if 'GPSAltitudeRef' in pexif_data and pexif_data['GPSAltitudeRef'] == '1':
-		print ("GPSAltitudeRef  Below Sea Level")
-
-    if 'Flash' in pexif_data and pexif_data['Flash'] == '0':
-		print ("Flash NO")
-    if 'Flash' in pexif_data and pexif_data['Flash'] == '1':
-		print ("Flash YES")
-
-    if 'GPSSpeedRef' in pexif_data and pexif_data['GPSSpeedRef'] == 'K':
-		print ("GPSSpeedRef  km/h")
-    if 'GPSSpeedRef' in pexif_data and pexif_data['GPSSpeedRef'] == 'M':
-		print ("GPSSpeedRef  mph")
-    if 'GPSSpeedRef' in pexif_data and pexif_data['GPSSpeedRef'] == 'N':
-        print ("GPSSpeedRef  knots")
-        
-    if 'ResolutionUnit' in pexif_data and pexif_data['ResolutionUnit'] == '1':
-		print ("ResolutionUnit None")
-    if 'ResolutionUnit' in pexif_data and pexif_data['ResolutionUnit'] == '12':
-		print ("ResolutionUnit inches")	
-    if 'ResolutionUnit' in pexif_data and pexif_data['ResolutionUnit'] == '3':
-		print ("ResolutionUnit cm")	
+    response_data = {}
     
+
+    if 'Make' in pexif_data:
+      response_data.update({'Make': pexif_data['Make']})
+    if 'Model' in pexif_data:
+      response_data.update({'Model': pexif_data['Model']})
+    if 'XResolution' in pexif_data:
+      response_data.update({'XResolution': pexif_data['XResolution']})
+    if 'YResolution' in pexif_data:
+      response_data.update({'YResolution': pexif_data['YResolution']}) 
+    vvalue = pexif_data.get('Orientation',None)
+    if str(vvalue) == '0':
+       response_data.update({'Orientation': 'Vertical'}) 
+    if str(vvalue) == '1':
+      response_data.update({'Orientation': 'Horizontal'}) 
+
+    vvalue = pexif_data.get('DateTimeDigitized',None)
+    if str(vvalue) != None:
+     response_data.update({'DateTimeDigitized': pexif_data['DateTimeDigitized']})	
     
-    return "ok"
+    vvalue = pexif_data.get('DateTime',None)
+    if str(vvalue) != None:
+     response_data.update({'DateTime': pexif_data['DateTime']})	
+    
+    vvalue = pexif_data.get('Flash',None)
+    if str(vvalue) == '0':
+      response_data.update({'Flash': 'NO'})	
+    if str(vvalue) == '1':
+      response_data.update({'Flash': 'YES'})	
+
+    vvalue = pexif_data.get('ISOSpeedRatings',None)
+    if str(vvalue) != None:
+     response_data.update({'ISOSpeedRatings': pexif_data['ISOSpeedRatings']})	
+      
+
+    vvalue = pexif_data.get('ResolutionUnit',None) 
+    if str(vvalue) == '1':
+      response_data.update({'ResolutionUnit': 'None'})
+    if str(vvalue) == '12':
+      response_data.update({'ResolutionUnit': 'inches'})
+    if str(vvalue) == '3':
+      response_data.update({'ResolutionUnit': 'cm'})
+    
+    #add gps data
+    response_data.update(pgps_data)
+    
+    print ("2///////////////////////////////////////////////////2")
+    print (response_data)
+    print ("2///////////////////////////////////////////////////2")
+    return response_data
 
 if __name__ == "__main__":
     application.run()
