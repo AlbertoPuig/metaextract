@@ -1,8 +1,1 @@
-24042018
-
-Falta por preparar la salida final.
-
-La función formatter recibo un diccionario con todos los tags
-y otro diccionario con los tags de gps convertidos.
-Hay que cambiar los valores por literales Ej. Orientation 0 por Orientation Vertical
-y formatear la salida que se el servicio devolverá.
+.
