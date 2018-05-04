@@ -12,11 +12,12 @@ application = Flask(__name__)
 @application.route("/<param>")
 def hello(param):
 	print ("Request to / with param: " + param)
-	return "Service Enabled!...."
+	return make_response('Service Enabled!....',200)
 
 #extra metadata from image uploaded
 @application.route('/api/v1/mex/upload', methods=['GET', 'POST'])
 def upload():
+    final_data = {}
     if request.method == 'POST' and 'photo' in request.files:
         try:
           upfile = request.files.get('photo')
@@ -25,11 +26,12 @@ def upload():
               mdata = get_metadata(upfile)
               gps_values = get_gpsdata(mdata)
               final_data = formatter(mdata, gps_values)
-              return 'OK'
-        except:
-          return 'KO'
+              return json.dumps(final_data)
+        except Exception as inst:
+          print (inst)
+          return make_response('Parameter Error\n',500)
     else:
-        return "Error, try again!!"
+        return make_response('Ops, try again!!\n', 400)
 
 #exif data extractor
 def get_metadata(pfile):    
@@ -98,7 +100,6 @@ def convert_to_degress(value):
 def formatter(pexif_data, pgps_data):
     response_data = {}
     
-
     if 'Make' in pexif_data:
       response_data.update({'Make': pexif_data['Make']})
     if 'Model' in pexif_data:
@@ -112,15 +113,21 @@ def formatter(pexif_data, pgps_data):
        response_data.update({'Orientation': 'Vertical'}) 
     if str(vvalue) == '1':
       response_data.update({'Orientation': 'Horizontal'}) 
+      
+    try:
+        vvalue = pexif_data.get('DateTimeDigitized',None)
+        if str(vvalue) != None:
+            response_data.update({'DateTimeDigitized': pexif_data['DateTimeDigitized']})
+    except: 
+        response_data.update({'DateTimeDigitized': 'NA'})
+    	
+    try:
+        vvalue = pexif_data.get('DateTime',None)
+        if str(vvalue) != None:
+            response_data.update({'DateTime': pexif_data['DateTime']})	
+    except: 
+        response_data.update({'DateTime': 'NA'})
 
-    vvalue = pexif_data.get('DateTimeDigitized',None)
-    if str(vvalue) != None:
-     response_data.update({'DateTimeDigitized': pexif_data['DateTimeDigitized']})	
-    
-    vvalue = pexif_data.get('DateTime',None)
-    if str(vvalue) != None:
-     response_data.update({'DateTime': pexif_data['DateTime']})	
-    
     vvalue = pexif_data.get('Flash',None)
     if str(vvalue) == '0':
       response_data.update({'Flash': 'NO'})	
@@ -142,10 +149,6 @@ def formatter(pexif_data, pgps_data):
     
     #add gps data
     response_data.update(pgps_data)
-    
-    print ("2///////////////////////////////////////////////////2")
-    print (response_data)
-    print ("2///////////////////////////////////////////////////2")
     return response_data
 
 if __name__ == "__main__":
