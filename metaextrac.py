@@ -1,8 +1,8 @@
 from flask import Flask, request, make_response, abort
 from flask_restful import Resource, Api
 import json
-from mimetypes import MimeTypes
-import urllib
+#from mimetypes import MimeTypes
+#import urllib
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 
@@ -113,7 +113,7 @@ def formatter(pexif_data, pgps_data):
        response_data.update({'Orientation': 'Vertical'}) 
     if str(vvalue) == '1':
       response_data.update({'Orientation': 'Horizontal'}) 
-      
+
     try:
         vvalue = pexif_data.get('DateTimeDigitized',None)
         if str(vvalue) != None:
